@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Person</title>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <style>
+            body {
+                margin-left: auto;
+                margin-right: auto;
+                width: 50%;
+            }
+            input[type="text"], input[type="number"], button {
+                height: 30px;
+                margin-top: 20px;
+                margin-right: 10px;
+            }
+            table {
+                width: 100%;
+            }
+            th, td {
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+            i.action {
+                cursor: pointer;
+                border: 1px solid gray;
+                padding: 5px;
+                border-radius: 5px;
+                margin-right: 5px;
+            }
+            i.action:hover {
+                background-color: #f2f2f2;
+            }
+            input.edit-inputs {
+                width: 30%;
+                outline: none;
+            }
+            input.search__box {
+                
+                height: 50px;
+                margin-top: 20px;
+                margin-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <p>
+                {{ title }}
+                <i class="material-icons" style="color:red">face</i>
+                Management
+            </p>
+            <hr/>
+            <form @submit.prevent="newPerson">
+                <fieldset>
+                    <legend>
+                        New Person
+                        <i class="material-icons">face</i>
+                    </legend>
+                    <input type="text" placeholder="Name" v-model="person.name" /> <br/>
+                    <input type="number" placeholder="Age" v-model="person.age"/> <br/>
+                    
+                    <button type="submit" :disabled="person.name && person.age > 0 ? false : true">Save</button>
+                    <button type="reset">Reset</button>
+                </fieldset>
+            </form>
+            
+            <hr/>
+            <p v-if="error" style="color: white; background-color: red;">{{ error }}</p>
+            <input class="search__box" type="text" placeholder="Search..." />
+            
+            <p style="color: red;" v-if="persons.length === 0">No data found</p>
+            <table v-else>
+                <caption>All Person</caption>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="p in persons" :key="p._id">
+                        <td>
+                            <input class="edit-inputs" type="text" v-model="p.name" v-if="p.isEdit" />
+                            <span v-else>{{ p.name }}</span>
+                        </td>
+                        <td>
+                            <input class="edit-inputs" type="number" v-model="p.age" v-if="p.isEdit"/>
+                            <span v-else>{{ p.age }}</span>
+                        </td>
+                        <td>
+                            <i class="action material-icons" style="color:green" @click="editPerson(p)" v-if="p.isEdit">save</i>
+                            <i class="action material-icons" style="color:blue" @click="() => p.isEdit = !p.isEdit " v-else>edit</i>
+                            <i class="action material-icons" style="color:red" @click="deletePerson(p._id)">delete</i>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <footer style="color: gray; text-align: right;">
+            <hr/>
+            <p>happy to help &copy; 2021</p>
+        </footer>
+        
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script>
+        const apiHost = 'http://localhost:3000'
+
+        const { createApp, ref, onMounted } = Vue
+        createApp({
+            setup() {
+            const title = ref('Person')
+            const person = ref({
+                name: '',
+                age: 0
+            })
+            const persons = ref([])
+            const error = ref(null)
+
+            const newPerson = () => {
+                console.log(person.value)
+                fetch(`${apiHost}/person`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(person.value)
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Failed to save person')
+                    }
+                    return res.json()
+                })
+                .then(data => {
+                    console.log(data)
+                    allPerson()
+                    person.value = { name: '',age: 0}
+                })
+                .catch(err => error.value = err.message)
+            }
+
+            const allPerson = () => {
+                fetch(`${apiHost}/person`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Failed to fetch person')
+                    }
+                    return res.json()
+                })
+                .then(data => {
+                    persons.value = data.map(d => {
+                        d.isEdit = false
+                        return d
+                    })
+                })
+                .catch(err => error.value = err.message)
+            }
+
+            const editPerson = (p) => {
+                p.isEdit = !p.isEdit
+                fetch(`${apiHost}/person/${p._id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(p)
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Failed to update person')
+                    }
+                    return res.json()
+                })
+                .then(data => {
+                    //allPerson()
+                })
+                .catch(err => error.value = err.message)
+            }
+
+            const deletePerson = (id) => {
+                fetch(`${apiHost}/person/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Failed to delete person')
+                    }
+                    return res.json()
+                })
+                .then(data => {
+                    allPerson()
+                })
+                .catch(err => error.value = err.message)
+            }
+            
+            
+            onMounted(() => {
+                allPerson()
+            })
+            
+            
+            return {
+                title, person, persons, error, newPerson, editPerson, deletePerson
+            }
+            }
+        }).mount('#app')
+        </script>
+    </body>
+</html>
