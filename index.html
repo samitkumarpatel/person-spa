@@ -84,7 +84,8 @@
             
             <hr/>
             <p v-if="error" style="color: white; background-color: red;">{{ error }}</p>
-            <input class="search__box" type="text" placeholder="Search..." />
+            
+            <input class="search__box" type="text" placeholder="Search..." v-model="searchKey" @keyup="search" />
             
             <p style="color: red;" v-if="persons.length === 0">No data found</p>
             <table v-else>
@@ -175,6 +176,7 @@
                 })
                 const persons = ref([])
                 const error = ref(null)
+                const searchKey = ref('')
 
                 const newPerson = () => {
                     console.log(person.value)
@@ -253,14 +255,33 @@
                     .catch(err => error.value = err.message)
                 }
                 
+                const search = () => {
+                    //1. we can look for persons ref value and filtered it
+                    //TODO
+                    
+                    //2. we can make a fetch request to the server
+                    fetch(`${apiHost}/find/person?name=${searchKey.value}`)
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error('Failed to search person')
+                        }
+                        return res.json()
+                    })
+                    .then(data => {
+                        persons.value = data.map(d => {
+                            d.isEdit = false
+                            return d
+                        })
+                    })
+                    .catch(err => error.value = err.message)
+                }
                 
                 onMounted(() => {
                     allPerson()
                 })
                 
-                
                 return {
-                    title, person, persons, error, newPerson, editPerson, deletePerson
+                    title, person, persons, error, searchKey, newPerson, editPerson, deletePerson, search
                 }
             },
             components: {
