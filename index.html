@@ -87,34 +87,37 @@
             
             <input class="search__box" type="text" placeholder="Search..." v-model="searchKey" @keyup="search" />
             
-            <p style="color: red;" v-if="persons.length === 0">No data found</p>
-            <table v-else>
-                <caption>All Person</caption>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Age</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="p in persons" :key="p._id">
-                        <td>
-                            <input class="edit-inputs" type="text" v-model="p.name" v-if="p.isEdit" />
-                            <span v-else>{{ p.name }}</span>
-                        </td>
-                        <td>
-                            <input class="edit-inputs" type="number" v-model="p.age" v-if="p.isEdit"/>
-                            <span v-else>{{ p.age }}</span>
-                        </td>
-                        <td>
-                            <i class="action material-icons" style="color:green" @click="editPerson(p)" v-if="p.isEdit">save</i>
-                            <i class="action material-icons" style="color:blue" @click="() => p.isEdit = !p.isEdit " v-else>edit</i>
-                            <i class="action material-icons" style="color:red" @click="deletePerson(p._id)">delete</i>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <p v-if="spinner">Loading ...</p>
+            <template v-else>
+                <p style="color: red;" v-if="persons.length === 0">No data found</p>
+                <table v-else>
+                    <caption>All Person</caption>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="p in persons" :key="p._id">
+                            <td>
+                                <input class="edit-inputs" type="text" v-model="p.name" v-if="p.isEdit" />
+                                <span v-else>{{ p.name }}</span>
+                            </td>
+                            <td>
+                                <input class="edit-inputs" type="number" v-model="p.age" v-if="p.isEdit"/>
+                                <span v-else>{{ p.age }}</span>
+                            </td>
+                            <td>
+                                <i class="action material-icons" style="color:green" @click="editPerson(p)" v-if="p.isEdit">save</i>
+                                <i class="action material-icons" style="color:blue" @click="() => p.isEdit = !p.isEdit " v-else>edit</i>
+                                <i class="action material-icons" style="color:red" @click="deletePerson(p._id)">delete</i>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </template>
         </div>
 
         <footer style="color: gray; text-align: right;">
@@ -177,6 +180,7 @@
                 const persons = ref([])
                 const error = ref(null)
                 const searchKey = ref('')
+                const spinner = ref(false)
 
                 const newPerson = () => {
                     console.log(person.value)
@@ -202,6 +206,7 @@
                 }
 
                 const allPerson = () => {
+                    spinner.value = true
                     fetch(`${apiHost}/person`)
                     .then(res => {
                         if (!res.ok) {
@@ -216,6 +221,7 @@
                         })
                     })
                     .catch(err => error.value = err.message)
+                    .finally(() => spinner.value = false)
                 }
 
                 const editPerson = (p) => {
@@ -256,6 +262,7 @@
                 }
                 
                 const search = () => {
+                    spinner.value = true
                     //1. we can look for persons ref value and filtered it
                     //TODO
                     
@@ -274,6 +281,7 @@
                         })
                     })
                     .catch(err => error.value = err.message)
+                    .finally(() => spinner.value = false)
                 }
                 
                 onMounted(() => {
@@ -281,7 +289,7 @@
                 })
                 
                 return {
-                    title, person, persons, error, searchKey, newPerson, editPerson, deletePerson, search
+                    title, person, persons, error, searchKey, spinner, newPerson, editPerson, deletePerson, search
                 }
             },
             components: {
