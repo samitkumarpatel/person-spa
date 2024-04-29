@@ -58,15 +58,25 @@
                 Management
             </p>
             <hr/>
+
+            <!-- <person-result></person-result>
+            <new-person-form></new-person-form>
+            <search></search> -->
+
             <form @submit.prevent="newPerson">
                 <fieldset>
                     <legend>
                         New Person
                         <i class="material-icons">face</i>
                     </legend>
-                    <input type="text" placeholder="Name" v-model="person.name" /> <br/>
-                    <input type="number" placeholder="Age" v-model="person.age"/> <br/>
-                    
+                    <label>
+                        <input type="text" placeholder="Name" v-model="person.name" />
+                    </label>
+                    <br/>
+                    <label>
+                        <input type="number" placeholder="Age" v-model="person.age"/>
+                    </label>
+                    <br/>
                     <button type="submit" :disabled="person.name && person.age > 0 ? false : true">Save</button>
                     <button type="reset">Reset</button>
                 </fieldset>
@@ -110,108 +120,151 @@
             <hr/>
             <p>happy to help &copy; 2021</p>
         </footer>
+
+        <template id="person-result">
+            <p>Person Result</p>
+        </template>
+        
+        <template id="person-form">
+            <p>Person Form</p>
+        </template>
+        
+        <template id="search">
+            <p>Search</p>
+        </template>
         
         <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
         <script>
         const apiHost = 'http://localhost:3000'
 
-        const { createApp, ref, onMounted } = Vue
+        const PersonResult = {
+            props: [],
+            emits: [],
+            template: '#person-result',
+            setup() {
+
+            }
+        }
+
+        const NewPersonForm = {
+            props: [],
+            emits: [],
+            template: '#person-form',
+            setup() {
+
+            }
+        }
+
+        const Search = {
+            props: [],
+            emits: [],
+            template: '#search',
+            setup() {
+
+            }
+        }
+
+
+        const { createApp, ref, onMounted, components } = Vue
         createApp({
             setup() {
-            const title = ref('Person')
-            const person = ref({
-                name: '',
-                age: 0
-            })
-            const persons = ref([])
-            const error = ref(null)
+                const title = ref('Person')
+                const person = ref({
+                    name: '',
+                    age: 0
+                })
+                const persons = ref([])
+                const error = ref(null)
 
-            const newPerson = () => {
-                console.log(person.value)
-                fetch(`${apiHost}/person`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(person.value)
-                })
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error('Failed to save person')
-                    }
-                    return res.json()
-                })
-                .then(data => {
-                    console.log(data)
-                    allPerson()
-                    person.value = { name: '',age: 0}
-                })
-                .catch(err => error.value = err.message)
-            }
-
-            const allPerson = () => {
-                fetch(`${apiHost}/person`)
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error('Failed to fetch person')
-                    }
-                    return res.json()
-                })
-                .then(data => {
-                    persons.value = data.map(d => {
-                        d.isEdit = false
-                        return d
+                const newPerson = () => {
+                    console.log(person.value)
+                    fetch(`${apiHost}/person`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(person.value)
                     })
-                })
-                .catch(err => error.value = err.message)
-            }
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error('Failed to save person')
+                        }
+                        return res.json()
+                    })
+                    .then(data => {
+                        console.log(data)
+                        allPerson()
+                        person.value = { name: '',age: 0}
+                    })
+                    .catch(err => error.value = err.message)
+                }
 
-            const editPerson = (p) => {
-                p.isEdit = !p.isEdit
-                fetch(`${apiHost}/person/${p._id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(p)
-                })
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error('Failed to update person')
-                    }
-                    return res.json()
-                })
-                .then(data => {
-                    //allPerson()
-                })
-                .catch(err => error.value = err.message)
-            }
+                const allPerson = () => {
+                    fetch(`${apiHost}/person`)
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error('Failed to fetch person')
+                        }
+                        return res.json()
+                    })
+                    .then(data => {
+                        persons.value = data.map(d => {
+                            d.isEdit = false
+                            return d
+                        })
+                    })
+                    .catch(err => error.value = err.message)
+                }
 
-            const deletePerson = (id) => {
-                fetch(`${apiHost}/person/${id}`, {
-                    method: 'DELETE'
-                })
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error('Failed to delete person')
-                    }
-                    return res.json()
-                })
-                .then(data => {
+                const editPerson = (p) => {
+                    p.isEdit = !p.isEdit
+                    fetch(`${apiHost}/person/${p._id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(p)
+                    })
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error('Failed to update person')
+                        }
+                        return res.json()
+                    })
+                    .then(data => {
+                        //allPerson()
+                    })
+                    .catch(err => error.value = err.message)
+                }
+
+                const deletePerson = (id) => {
+                    fetch(`${apiHost}/person/${id}`, {
+                        method: 'DELETE'
+                    })
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error('Failed to delete person')
+                        }
+                        return res.json()
+                    })
+                    .then(data => {
+                        allPerson()
+                    })
+                    .catch(err => error.value = err.message)
+                }
+                
+                
+                onMounted(() => {
                     allPerson()
                 })
-                .catch(err => error.value = err.message)
-            }
-            
-            
-            onMounted(() => {
-                allPerson()
-            })
-            
-            
-            return {
-                title, person, persons, error, newPerson, editPerson, deletePerson
-            }
+                
+                
+                return {
+                    title, person, persons, error, newPerson, editPerson, deletePerson
+                }
+            },
+            components: {
+                PersonResult, NewPersonForm, Search
             }
         }).mount('#app')
         </script>
